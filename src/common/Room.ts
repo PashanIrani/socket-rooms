@@ -1,7 +1,9 @@
+import { Member } from "./Member";
+
 export class Room {
   id: string;
   capacity: number | null = null;
-  activeMemberCount: number = 0;
+  members : Member[] = [];
   // TODO: Password
 
   constructor(id: string, capacity: number) {
@@ -10,14 +12,16 @@ export class Room {
     if (capacity) {
       this.capacity = capacity;
     }
-
   }
 
-  incrementActiveMemberCount() {
-    this.activeMemberCount++;
+
+  addMember(member: Member) {
+    this.members.push(member);
   }
 
-  decrementActiveMemberCount() {
-    this.activeMemberCount--;
+  removeMember(id: string) {
+    this.members = this.members.filter((member : Member) => {
+      return member.id !== id;
+    });
   }
 }

@@ -1,7 +1,14 @@
 import {Room} from 'src/common/Room';
 import Events from 'src/common/Events';
+import { Member } from 'src/common/Member';
 
 let rooms : {[key: string]: Room}= {};
+let members : {[key: string]: Member} = {};
+
+function logState() {
+  console.log(rooms);
+  console.log(members);
+}
 
 const createRoom = (roomId : string, capacity: number)  => {
   // check if room with id of roomId doesn't already exist
@@ -14,39 +21,49 @@ const createRoom = (roomId : string, capacity: number)  => {
 
   // add new room
   rooms[roomId] = newRoom;
+  console.debug(`✨ Room ${roomId} Created.`)
 }
 
 // Add Member to a Room
-const joinRoom = (roomId: string, socket: any) => {
+const joinRoom = (data: any, socket: any) => {
+  console.log(data);
+  
+  let {member, roomId} = data;
   if (!rooms.hasOwnProperty(roomId)) return; // If room doesn't exist, return. TODO: implement a way to fail
 
-  console.debug(`${socket.id} joining... RoomId: ${roomId}`);
-  socket.join(roomId); // Join room
+  
+  socket.join(data.roomId); // Join room
 
-  rooms[roomId].incrementActiveMemberCount(); // Track number of active members in room
+  member.rooms.push(rooms[data.roomId]);
+
+  members[member.id] = member;
+  rooms[data.roomId].addMember(data.member); // Track number of active members in room
+
+  console.debug(`🟢 ${socket.id} joined Room [RoomId: ${roomId}]`);
+  logState();
 }
 
 // Update Rooms when a member leaves
 const disconnectCallback = (socket: any) => {
-  console.debug(`${socket.id} disconnecting... `);
+  if (members[socket.id] == undefined) {
+    console.error("Member doesn't exist.");
+    return;
+  }
 
-  socket.rooms.forEach((room: any) => { // TODO: implement 'members' to do a proper look up
-      if (room === socket.id) return;
+  members[socket.id].rooms.forEach((room : Room) => {
+    room.removeMember(socket.id);
+  })
+  
+  delete members[socket.id];
 
-      rooms[room].decrementActiveMemberCount();
-
-      // Delete Room if empty. TODO: possibily implement a Persistent Room feature?
-      if (rooms[room].activeMemberCount == 0) {
-          delete rooms[room];
-      }
-  });
-
+  console.debug(`❌ ${socket.id} disconnected `);
+  logState();
 }
 
 // Handle Socket events
 const socketBehavior = (socket: any) => {
-  socket.on(Events.JOIN_ROOM, (roomId: string) => joinRoom(roomId, socket));
-  socket.on('disconnecting', () => disconnectCallback(socket))
+  socket.on(Events.JOIN_ROOM, (data: any) => joinRoom(data, socket));
+  socket.on('disconnecting', () => disconnectCallback(socket));
 }
 
 // Initialize
