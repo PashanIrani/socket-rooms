@@ -4,6 +4,7 @@ import { Member } from 'src/common/Member';
 
 let rooms : {[key: string]: Room}= {};
 let members : {[key: string]: Member} = {};
+let socketRoomService : any;
 
 function logState() {
   console.log(rooms);
@@ -43,6 +44,12 @@ const joinRoom = (data: any, socket: any) => {
   logState();
 }
 
+const sendMessageHandler = (data: any) => {
+  let {roomId, message} = data;
+  
+  socketRoomService.to(roomId).emit(Events.listen(roomId), message);
+}
+
 // Update Rooms when a member leaves
 const disconnectCallback = (socket: any) => {
   if (members[socket.id] == undefined) {
@@ -63,13 +70,14 @@ const disconnectCallback = (socket: any) => {
 // Handle Socket events
 const socketBehavior = (socket: any) => {
   socket.on(Events.JOIN_ROOM, (data: any) => joinRoom(data, socket));
+  socket.on(Events.SEND_MESSAGE, (data: any) => sendMessageHandler(data));
   socket.on('disconnecting', () => disconnectCallback(socket));
 }
 
 // Initialize
 const init = (Server: any) => {
-  const io = Server;
-  io.on('connection', socketBehavior);
+  socketRoomService = Server;
+  socketRoomService.on('connection', socketBehavior);
 }
 
 export default {init, createRoom};
