@@ -1,6 +1,4 @@
-import {Room} from 'src/common/Room';
-import Events from 'src/common/Events';
-import { Member } from 'src/common/Member';
+import { Member, Events, Room, MessageData } from 'src/common';
 
 let rooms : {[key: string]: Room}= {};
 let members : {[key: string]: Member} = {};
@@ -27,9 +25,8 @@ const createRoom = (roomId : string, capacity: number)  => {
 
 // Add Member to a Room
 const joinRoom = (data: any, socket: any) => {
-  console.log(data);
-  
   let {member, roomId} = data;
+
   if (!rooms.hasOwnProperty(roomId)) return; // If room doesn't exist, return. TODO: implement a way to fail
 
   
@@ -44,10 +41,9 @@ const joinRoom = (data: any, socket: any) => {
   logState();
 }
 
-const sendMessageHandler = (data: any) => {
-  let {roomId, message} = data;
-  
-  socketRoomService.to(roomId).emit(Events.listen(roomId), message);
+const sendMessageHandler = (data: MessageData) => {
+  let { roomId } = data;
+  socketRoomService.to(roomId).emit(Events.LISTEN_FOR_MESSAGES, data);
 }
 
 // Update Rooms when a member leaves
