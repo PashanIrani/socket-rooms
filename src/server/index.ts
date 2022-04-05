@@ -27,9 +27,12 @@ const createRoom = (roomId : string, capacity: number)  => {
 const joinRoom = (data: any, socket: any) => {
   let {member, roomId} = data;
 
-  if (!rooms.hasOwnProperty(roomId)) return; // If room doesn't exist, return. TODO: implement a way to fail
+  // If room doesn't exist, return. TODO: implement a way to fail (a way to tell client)
+  if (!(roomId in rooms)) {
+    console.error(`Room with ID ${roomId} doesn't exist`);
+    return; 
+  }
 
-  
   socket.join(data.roomId); // Join room
 
   member.rooms.push(rooms[data.roomId]);

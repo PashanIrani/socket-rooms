@@ -4,6 +4,12 @@ declare global {
   interface Window { socketRooms: {socket: any, me: Member | null}; }
 }
 
+let roomResponseCallbacks: {[key: string]: Function} = {};
+
+const setResponse = (roomId: string, responseCallback : Function) => {
+  roomResponseCallbacks[roomId] = responseCallback;
+}
+
 const sendMessageToRoom = (roomId: string, message: any) => {
   let {socket, me} = window.socketRooms;
 
@@ -25,13 +31,18 @@ const joinRoom = (roomId: string, responseCallback : Function | undefined) => {
   // get ready to listen to specific room
   socket.on(Events.LISTEN_FOR_MESSAGES, (data: MessageData) => { 
     if(me?.id == data.from) return;
-    
-    if (responseCallback == undefined) {
-      console.log('Response callback not provided.');
-      return;
-    }
 
-    responseCallback(data);
+    // Check if responseCallback was set using function. .setResponse(roomId, () => {}) defined callbacks should always run.
+    if (roomId in roomResponseCallbacks) {
+      responseCallback = roomResponseCallbacks[roomId];
+    } 
+    
+    // run calllback if defined, otherwise throw eroor
+    if (responseCallback) {
+      responseCallback(data);
+    } else {
+      console.error('Response callback not provided.');
+    }
   });
 }
 
@@ -55,4 +66,4 @@ const init = (userProvidedSocket: any) => {
   return promise;
 }
 
-export default {init, joinRoom, sendMessageToRoom};
+export default {init, joinRoom, sendMessageToRoom, setResponse};
