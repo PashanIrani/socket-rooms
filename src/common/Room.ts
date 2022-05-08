@@ -14,9 +14,19 @@ export class Room {
     }
   }
 
+  hasMember(member: Member) {
+    for (let i = 0; i < this.members.length; ++i) {
+      if (this.members[i].id === member.id) return true;
+    }
+    
+    return false;
+  }
 
   addMember(member: Member) {
+    if (this.hasMember(member)) return false;
+
     this.members.push(member);
+    return true;
   }
 
   removeMember(id: string) {

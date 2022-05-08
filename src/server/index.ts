@@ -66,11 +66,26 @@ const disconnectCallback = (socket: any) => {
   logState();
 }
 
+const emitJoinedRooms = (data: any) => {
+  let {me} = data;
+  
+  let rooms = [];
+
+  // create list
+  for (let i = 0; i < members[me.id].rooms.length; ++i) {
+    rooms.push(members[me.id].rooms[i].id);
+  }
+
+  // Emit list to socket that wanted to know
+  socketRoomService.to(me.id).emit(Events.GET_JOINED_ROOMS_RESPONSE, rooms); 
+}
+
 // Handle Socket events
 const socketBehavior = (socket: any) => {
   socket.on(Events.JOIN_ROOM, (data: any) => joinRoom(data, socket));
   socket.on(Events.SEND_MESSAGE, (data: any) => sendMessageHandler(data));
   socket.on('disconnecting', () => disconnectCallback(socket));
+  socket.on(Events.GET_JOINED_ROOMS, (data: any) => emitJoinedRooms(data));
 }
 
 // Initialize

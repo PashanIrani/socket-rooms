@@ -66,4 +66,17 @@ const init = (userProvidedSocket: any) => {
   return promise;
 }
 
-export {init, joinRoom, sendMessageToRoom, setResponse};
+const getJoinedRooms = () => {
+  return new Promise((res) => {
+    let {socket, me} = window.socketRooms;
+
+    // Send event to get response from server
+    socket.emit(Events.GET_JOINED_ROOMS, {me});
+
+    // resolve response
+    socket.on(Events.GET_JOINED_ROOMS_RESPONSE, (data: any) => {
+      res(data);
+    });
+  });
+}
+export {init, joinRoom, sendMessageToRoom, setResponse, getJoinedRooms};
