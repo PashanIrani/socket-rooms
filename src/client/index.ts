@@ -66,4 +66,4 @@ const init = (userProvidedSocket: any) => {
   return promise;
 }
 
-export default {init, joinRoom, sendMessageToRoom, setResponse};
+export {init, joinRoom, sendMessageToRoom, setResponse};

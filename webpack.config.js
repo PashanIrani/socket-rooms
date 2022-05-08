@@ -26,8 +26,11 @@ module.exports = {
   output: {
     filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
-    library: 'SocketRooms[name]',
-    libraryTarget: "commonjs2",
-    libraryExport: 'default',
+    globalObject: 'this',
+    library: {
+      name: 'SocketRooms[name]',
+      type: 'umd'
+    },
+    
   },
 }

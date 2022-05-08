@@ -79,4 +79,5 @@ const init = (Server: any) => {
   socketRoomService.on('connection', socketBehavior);
 }
 
-export default {init, createRoom};
+const SocketRoomsServer = {init, createRoom};
+export {SocketRoomsServer};
