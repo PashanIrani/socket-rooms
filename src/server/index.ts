@@ -1,4 +1,4 @@
-import { Member, Events, Room, MessageData } from 'src/common';
+import { Member, Events, Room, MessageData, Response } from 'src/common';
 
 let rooms : {[key: string]: Room}= {};
 let members : {[key: string]: Member} = {};
@@ -30,23 +30,27 @@ const joinRoom = (data: any, socket: any) => {
   // If room doesn't exist, return. TODO: implement a way to fail (a way to tell client)
   if (!(roomId in rooms)) {
     console.error(`Room with ID ${roomId} doesn't exist`);
+    
+    socketRoomService.to(member.id).emit(Events.JOIN_ROOM_RESPONSE, new Response(false, `Room with ID ${roomId} doesn't exist`, {member: JSON.parse(JSON.stringify(member))}))
     return; 
   }
 
   socket.join(data.roomId); // Join room
-
-  member.rooms.push(rooms[data.roomId]);
+  
+  member.rooms.push(data.roomId);
 
   members[member.id] = member;
-  rooms[data.roomId].addMember(data.member); // Track number of active members in room
+  rooms[data.roomId].addMember(data.member.id); // Track number of active members in room
 
+  socketRoomService.to(member.id).emit(Events.JOIN_ROOM_RESPONSE, new Response(true, "Joined Room Successful", {member: JSON.parse(JSON.stringify(member))}));
   console.debug(`🟢 ${socket.id} joined Room [RoomId: ${roomId}]`);
   logState();
+
 }
 
 const sendMessageHandler = (data: MessageData) => {
   let { roomId } = data;
-  socketRoomService.to(roomId).emit(Events.LISTEN_FOR_MESSAGES, data);
+  socketRoomService.to(roomId).emit(Events.LISTEN_FOR_MESSAGES(roomId), data);
 }
 
 // Update Rooms when a member leaves
@@ -56,8 +60,8 @@ const disconnectCallback = (socket: any) => {
     return;
   }
 
-  members[socket.id].rooms.forEach((room : Room) => {
-    room.removeMember(socket.id);
+  members[socket.id].rooms.forEach((roomId : string) => {
+    rooms[roomId].removeMember(socket.id);
   })
   
   delete members[socket.id];
@@ -66,26 +70,12 @@ const disconnectCallback = (socket: any) => {
   logState();
 }
 
-const emitJoinedRooms = (data: any) => {
-  let {me} = data;
-  
-  let rooms = [];
-
-  // create list
-  for (let i = 0; i < members[me.id].rooms.length; ++i) {
-    rooms.push(members[me.id].rooms[i].id);
-  }
-
-  // Emit list to socket that wanted to know
-  socketRoomService.to(me.id).emit(Events.GET_JOINED_ROOMS_RESPONSE, rooms); 
-}
 
 // Handle Socket events
 const socketBehavior = (socket: any) => {
   socket.on(Events.JOIN_ROOM, (data: any) => joinRoom(data, socket));
   socket.on(Events.SEND_MESSAGE, (data: any) => sendMessageHandler(data));
   socket.on('disconnecting', () => disconnectCallback(socket));
-  socket.on(Events.GET_JOINED_ROOMS, (data: any) => emitJoinedRooms(data));
 }
 
 // Initialize

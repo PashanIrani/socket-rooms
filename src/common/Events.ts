@@ -1,7 +1,6 @@
 export default {
-  JOIN_ROOM: 'join room',
-  SEND_MESSAGE: 'send message',
-  LISTEN_FOR_MESSAGES: 'listen for messages',
-  GET_JOINED_ROOMS: 'get joined rooms',
-  GET_JOINED_ROOMS_RESPONSE: 'get joined rooms response'
+  JOIN_ROOM: 'JOIN_ROOM',
+  JOIN_ROOM_RESPONSE: 'JOIN_ROOM_RESPONSE',
+  SEND_MESSAGE: 'SEND_MESSAGE',
+  LISTEN_FOR_MESSAGES: (roomId: string) => `LISTEN_FOR_MESSAGES_${roomId}`
 }

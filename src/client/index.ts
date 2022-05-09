@@ -1,4 +1,4 @@
-import { Member, Events, MessageData } from 'src/common';
+import { Member, Events, MessageData, Response } from 'src/common';
 
 declare global {
   interface Window { socketRooms: {socket: any, me: Member | null}; }
@@ -25,25 +25,41 @@ const sendMessageToRoom = (roomId: string, message: any) => {
 const joinRoom = (roomId: string, responseCallback : Function | undefined) => {
   let {socket, me} = window.socketRooms;
 
-  // Emit join room event
-  socket.emit(Events.JOIN_ROOM, {roomId, member: me});
+  
+  return new Promise((res, rej) => {
 
-  // get ready to listen to specific room
-  socket.on(Events.LISTEN_FOR_MESSAGES, (data: MessageData) => { 
-    if(me?.id == data.from) return;
+    // get ready to listen to specific room
+    socket.on(Events.LISTEN_FOR_MESSAGES(roomId), (data: MessageData) => { 
+      if(me?.id == data.from) return;
 
-    // Check if responseCallback was set using function. .setResponse(roomId, () => {}) defined callbacks should always run.
-    if (roomId in roomResponseCallbacks) {
-      responseCallback = roomResponseCallbacks[roomId];
-    } 
-    
-    // run calllback if defined, otherwise throw eroor
-    if (responseCallback) {
-      responseCallback(data);
-    } else {
-      console.error('Response callback not provided.');
-    }
-  });
+      // Check if responseCallback was set using function. .setResponse(roomId, () => {}) defined callbacks should always run.
+      if (roomId in roomResponseCallbacks) {
+        responseCallback = roomResponseCallbacks[roomId];
+      } 
+      
+      // run calllback if defined, otherwise throw eroor
+      if (responseCallback) {
+        responseCallback(data);
+      } else {
+        console.error('Response callback not provided.');
+      }
+    });
+
+    socket.on(Events.JOIN_ROOM_RESPONSE, (data: Response) => {
+      console.log('RESPONSE');
+      
+      window.socketRooms.me = data.data.member; // update client version of 'me' with the version from server
+
+      if (data.success) {
+        res(data);
+      } else {
+        rej(data);
+      }
+    });
+
+     // Emit join room event
+    socket.emit(Events.JOIN_ROOM, {roomId, member: me});
+  })
 }
 
 const init = (userProvidedSocket: any) => {
@@ -67,16 +83,8 @@ const init = (userProvidedSocket: any) => {
 }
 
 const getJoinedRooms = () => {
-  return new Promise((res) => {
-    let {socket, me} = window.socketRooms;
-
-    // Send event to get response from server
-    socket.emit(Events.GET_JOINED_ROOMS, {me});
-
-    // resolve response
-    socket.on(Events.GET_JOINED_ROOMS_RESPONSE, (data: any) => {
-      res(data);
-    });
-  });
+  let {me} = window.socketRooms;
+  return me?.rooms;
 }
+
 export {init, joinRoom, sendMessageToRoom, setResponse, getJoinedRooms};

@@ -79,7 +79,7 @@ Initializes Socket-Rooms for client
 
 ### **.joinRoom(roomId, responseCallback)**
 
-Adds client to room
+Adds client to room. Returns a promise which resolves/rejects based on if client was able to join the room.
 
 **roomId** `string`: ID for the room to join
 
@@ -103,7 +103,7 @@ Send a message to room
 
 ### **.getJoinedRooms()**
 
-Returns a promise, which will resolve with an array of all the room IDs the client has joined
+Returns list of rooms client has joined.
 
 
 

@@ -1,8 +1,6 @@
-import {Room} from 'src/common/Room';
-
 export class Member {
   id: string;
-  rooms: Room[] = [];
+  rooms: string[] = [];
 
   constructor(id: string) {
     this.id = id;

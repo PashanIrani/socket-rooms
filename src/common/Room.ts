@@ -1,9 +1,7 @@
-import { Member } from "./Member";
-
 export class Room {
   id: string;
   capacity: number | null = null;
-  members : Member[] = [];
+  members : string[] = [];
   // TODO: Password
 
   constructor(id: string, capacity: number) {
@@ -14,24 +12,24 @@ export class Room {
     }
   }
 
-  hasMember(member: Member) {
+  hasMember(memberId: string) {
     for (let i = 0; i < this.members.length; ++i) {
-      if (this.members[i].id === member.id) return true;
+      if (this.members[i] === memberId) return true;
     }
     
     return false;
   }
 
-  addMember(member: Member) {
-    if (this.hasMember(member)) return false;
+  addMember(memberId: string) {
+    if (this.hasMember(memberId)) return false;
 
-    this.members.push(member);
+    this.members.push(memberId);
     return true;
   }
 
   removeMember(id: string) {
-    this.members = this.members.filter((member : Member) => {
-      return member.id !== id;
+    this.members = this.members.filter((memberId : string) => {
+      return memberId !== id;
     });
   }
 }
