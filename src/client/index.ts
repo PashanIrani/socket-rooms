@@ -87,4 +87,4 @@ const getJoinedRooms = () => {
   return me?.rooms;
 }
 
-export {init, joinRoom, sendMessageToRoom, setResponse, getJoinedRooms};
+export default {init, joinRoom, sendMessageToRoom, setResponse, getJoinedRooms};
